@@ -12,10 +12,12 @@ async function init() {
 
   try {
     const res = await fetch(API_URL);
-    const data = await res.json();
-
     console.log("API Response Status:", res.status);
     console.log('API URL:', API_URL);
+    if (!res.ok) {
+      throw new Error(`API error: ${res.statusText}`);
+    }
+    const data = await res.json();
 
     state.stories = data.stories;
 
