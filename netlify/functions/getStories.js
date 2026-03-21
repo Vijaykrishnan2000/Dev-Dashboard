@@ -18,21 +18,21 @@ exports.handler = async function () {
 
    
 
-    const response = await fetch(`https://vijaykrishnan.atlassian.net/rest/api/3/search/jql?jql=${jql}&fields=summary,description,status`, {
+    /*const response = await fetch(`https://vijaykrishnan.atlassian.net/rest/api/3/search/jql?jql=${jql}&fields=summary,description,status`, {
         method: 'GET',
         headers: {
             'Authorization': 'Basic ' + btoa('soundarakrishna@gmail.com:ATATT3xFfGF0S85rKZIc0LCrzXGRNYuAcAcUORMaIYynh_gh3a3-4dqPzreWWmD3Yhoxxzs9rS8ejKmOw36_U9eGOd5E-YORpnVeBTuIty8yHn_J5w4CGkzKHJ6tQrBx0nWZIIvYbgkfHpfxF46EC2zU0N_DfyL4xlCxUOznn5_OVFYmbsyKIHI=C246E738'),
             'Accept': 'application/json'
         }
-        });
+        });*/
 
-    /*const response = await fetch(`${JIRA_BASE_URL}/rest/api/3/search/jql?jql=${jql}&fields=summary`, {
+    const response = await fetch(`${JIRA_BASE_URL}/rest/api/3/search/jql?jql=${jql}&fields=summary`, {
         method: 'GET',
         headers: {
             'Authorization': 'Basic ' + btoa(`${JIRA_EMAIL}:${JIRA_API_TOKEN}`),
             'Accept': 'application/json'
         }
-        });*/
+        });
 
     
 
