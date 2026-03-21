@@ -2,9 +2,14 @@ const fetch = require('node-fetch');
 
 exports.handler = async function () {
   try {
-    const JIRA_BASE_URL = process.env.JIRA_BASE_URL;
+    /*const JIRA_BASE_URL = process.env.JIRA_BASE_URL;
     const JIRA_EMAIL = process.env.JIRA_EMAIL;
-    const JIRA_API_TOKEN = process.env.JIRA_API_TOKEN;
+    const JIRA_API_TOKEN = process.env.JIRA_API_TOKEN;*/
+
+    const JIRA_BASE_URL='https://vijaykrishnan.atlassian.net';
+    const JIRA_EMAIL='soundarakrishna@gmail.com';
+    const JIRA_API_TOKEN='ATATT3xFfGF0S85rKZIc0LCrzXGRNYuAcAcUORMaIYynh_gh3a3-4dqPzreWWmD3Yhoxxzs9rS8ejKmOw36_U9eGOd5E-YORpnVeBTuIty8yHn_J5w4CGkzKHJ6tQrBx0nWZIIvYbgkfHpfxF46EC2zU0N_DfyL4xlCxUOznn5_OVFYmbsyKIHI=C246E738';
+    
     
     console.log("Fetching stories from Jira...");
     console.log(`JIRA_BASE_URL: ${JIRA_BASE_URL}`);
