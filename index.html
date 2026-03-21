@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>PR Dashboard</title>
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+
+<div class="app">
+  <header class="header">
+    <div class="logo">PR Intelligence</div>
+  </header>
+
+  <div class="main">
+    <aside class="sidebar" id="storyList"></aside>
+
+    <section class="content">
+      <div id="statusBar"></div>
+
+      <div id="emptyState">Select a story</div>
+
+      <div id="details" class="hidden">
+        <h2 id="storyTitle"></h2>
+        <div id="storyStatus"></div>
+
+        <div class="tabs">
+          <button class="tab active" data-tab="overview">Overview</button>
+          <button class="tab" data-tab="prs">PRs</button>
+          <button class="tab" data-tab="analysis">Analysis</button>
+        </div>
+
+        <div id="overview" class="tab-content active"></div>
+        <div id="prs" class="tab-content"></div>
+        <div id="analysis" class="tab-content"></div>
+      </div>
+    </section>
+  </div>
+</div>
+
+<script src="app.js"></script>
+</body>
+</html>
