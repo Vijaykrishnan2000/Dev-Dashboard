@@ -5,6 +5,11 @@ exports.handler = async function () {
     const JIRA_BASE_URL = process.env.JIRA_BASE_URL;
     const JIRA_EMAIL = process.env.JIRA_EMAIL;
     const JIRA_API_TOKEN = process.env.JIRA_API_TOKEN;
+    
+    console.log("Fetching stories from Jira...");
+    console.log(`JIRA_BASE_URL: ${JIRA_BASE_URL}`);
+    console.log(`JIRA_EMAIL: ${JIRA_EMAIL}`);
+    console.log(`JIRA_API_TOKEN: ${JIRA_API_TOKEN ? '***' : 'Not Set'}`);
 
     const response = await fetch(
       `${JIRA_BASE_URL}/rest/api/3/search?jql=assignee=currentUser() AND issuetype=Story&fields=summary,description,status`,
