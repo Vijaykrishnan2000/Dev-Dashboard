@@ -14,6 +14,9 @@ async function init() {
     const res = await fetch(API_URL);
     const data = await res.json();
 
+    console.log("API Response Status:", res.status);
+    console.log('API URL:', API_URL);
+
     state.stories = data.stories;
 
     renderStories();
