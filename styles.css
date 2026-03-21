@@ -278,9 +278,229 @@ body {
 }
 
 .tab-content.active {
-  display: block; 
+  display: block;
 }
 
 .hidden {
   display: none !important;
+}
+
+/***********NEW Section for PR Table **************
+
+
+
+.pr-table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-top: 16px;
+  background: #ffffff;
+  border-radius: 10px;
+  overflow: hidden;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+}
+
+
+.pr-table thead {
+  background: #f1f5f9; 
+}
+
+.pr-table th {
+  text-align: left;
+  padding: 12px 14px;
+  font-size: 13px;
+  font-weight: 600;
+  color: #334155; 
+  border-bottom: 1px solid #e2e8f0;
+}
+
+
+.pr-table td {
+  padding: 12px 14px;
+  font-size: 13px;
+  color: #475569;
+  border-bottom: 1px solid #f1f5f9;
+}
+
+
+.pr-table tbody tr:hover {
+  background: #f8fafc;
+  transition: 0.2s ease;
+}
+
+
+.pr-table td:first-child {
+  font-weight: 600;
+  color: #1e293b;
+}
+
+
+.pr-table a {
+  color: #2563eb; 
+  text-decoration: none;
+  font-weight: 500;
+}
+
+.pr-table a:hover {
+  text-decoration: underline;
+}
+
+
+.pr-table td:nth-child(3) {
+  color: #1e293b;
+  font-weight: 500;
+}
+
+
+.pr-table td:nth-child(4) {
+  font-size: 12px;
+  color: #64748b;
+}
+
+
+#prs p {
+  padding: 12px;
+  color: #64748b;
+  font-size: 14px;
+}
+
+*/
+
+/*********** PR Table - Polished Dark UI ***********/
+
+.pr-table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-top: 16px;
+  background: #0f172a;
+  border-radius: 12px;
+  overflow: hidden;
+  border: 1px solid #1e293b;
+}
+
+/* Header */
+.pr-table thead {
+  background: #020617;
+}
+
+.pr-table th {
+  text-align: left;
+  padding: 14px 16px;
+  font-size: 12px;
+  font-weight: 600;
+  color: #94a3b8;
+  text-transform: uppercase;
+  letter-spacing: 0.6px;
+  border-bottom: 1px solid #1e293b;
+}
+
+/* Rows */
+.pr-table td {
+  padding: 14px 16px;
+  font-size: 14px;
+  color: #e2e8f0;
+  border-bottom: 1px solid #1e293b;
+  vertical-align: middle;
+}
+
+/* Row hover */
+.pr-table tbody tr:hover {
+  background: rgba(59, 130, 246, 0.06);
+}
+
+/* Index column */
+.pr-table td:first-child {
+  color: #64748b;
+  font-size: 13px;
+  width: 50px;
+}
+
+/* Commit column */
+.pr-table td:nth-child(2) {
+  font-weight: 500;
+}
+
+/* Link */
+.pr-table a {
+  color: #60a5fa;
+  text-decoration: none;
+}
+
+.pr-table a:hover {
+  color: #93c5fd;
+  text-decoration: underline;
+}
+
+/* Toggle icon */
+.pr-toggle {
+  margin-right: 8px;
+  color: #3b82f6;
+  font-size: 12px;
+}
+
+/* Author */
+.pr-author {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.pr-avatar {
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  border: 1px solid #334155;
+}
+
+/* Date */
+.pr-table td:nth-child(4) {
+  color: #94a3b8;
+  font-size: 13px;
+}
+
+/* Status Badge */
+.pr-badge {
+  padding: 4px 10px;
+  border-radius: 999px;
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.4px;
+}
+
+/* VERIFIED (green) */
+.pr-merged {
+  background: rgba(16, 185, 129, 0.15);
+  color: #34d399;
+}
+
+/* UNVERIFIED (red) */
+.pr-closed {
+  background: rgba(239, 68, 68, 0.15);
+  color: #f87171;
+}
+
+/* Expand row */
+.pr-details-row {
+  display: none;
+  background: #020617;
+}
+
+.pr-details {
+  padding: 14px 18px;
+  font-size: 13px;
+  color: #94a3b8;
+}
+
+/* File list */
+.pr-file {
+  padding: 6px 0;
+  font-family: monospace;
+  border-bottom: 1px dashed #1e293b;
+}
+
+.pr-file:last-child {
+  border-bottom: none;
+}
+
+.pr-expand {
+  cursor: pointer;
 }
