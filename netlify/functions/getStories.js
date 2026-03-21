@@ -2,9 +2,7 @@ const fetch = require("node-fetch");
 
 exports.handler = async function () {
   try {
-    const JIRA_BASE_URL = process.env.JIRA_BASE_URL;
-    const JIRA_EMAIL = process.env.JIRA_EMAIL;
-    const JIRA_API_TOKEN = process.env.JIRA_API_TOKEN;   
+    
 
     const jql = encodeURIComponent(
         'assignee = currentUser() AND issuetype = Story'
