@@ -4,18 +4,20 @@ exports.handler = async function () {
   try {
     
 
+    const JIRA_API_TOKEN = process.env.JIRA_API_TOKEN;
     const jql = encodeURIComponent(
         'assignee = currentUser() AND issuetype = Story'
     );
 
-    
-  const response = await fetch(`https://vijaykrishnan.atlassian.net/rest/api/3/search/jql?jql=${jql}&fields=summary,description,status`, {
-          method: 'GET',
-          headers: {
-              'Authorization': 'Basic ' + btoa('soundarakrishna@gmail.com:ATATT3xFfGF0S85rKZIc0LCrzXGRNYuAcAcUORMaIYynh_gh3a3-4dqPzreWWmD3Yhoxxzs9rS8ejKmOw36_U9eGOd5E-YORpnVeBTuIty8yHn_J5w4CGkzKHJ6tQrBx0nWZIIvYbgkfHpfxF46EC2zU0N_DfyL4xlCxUOznn5_OVFYmbsyKIHI=C246E738'),
-              'Accept': 'application/json'
-          }
-          });
+   
+
+    const response = await fetch(`https://vijaykrishnan.atlassian.net/rest/api/3/search/jql?jql=${jql}&fields=summary,description,status`, {
+        method: 'GET',
+        headers: {
+            'Authorization': 'Basic ' + btoa(`soundarakrishna@gmail.com:${JIRA_API_TOKEN}`),
+            'Accept': 'application/json'
+        }
+        });
     
 
     if (!response.ok) {
