@@ -406,13 +406,14 @@ function renderSection(title, content, type) {
 function formatContent(text, type) {
   if (!text) return "";
 
+  // Normalize broken LLM formatting
   let cleaned = text
     .replace(/\\n/g, "\n")
     .replace(/```javascript/g, "```")
     .replace(/javascript\n/g, "")
     .trim();
 
-  // 👉 SECURITY: simple bullet rendering
+  /* ---------------- SECURITY (simple bullets) ---------------- */
   if (type === "security") {
     const items = cleaned
       .split(/\n\* /)
@@ -426,30 +427,60 @@ function formatContent(text, type) {
     `;
   }
 
-  // 👉 STRUCTURED (Blockers / Refactorings)
+  /* ---------------- STRUCTURED (Blockers + Refactorings) ---------------- */
+
   const items = cleaned.split(/\n\* /).filter(Boolean);
 
   return items.map(item => {
-    const titleMatch = item.match(/\*\*(.*?)\*\*/);
-    const title = titleMatch ? titleMatch[1] : item.split("\n")[0];
+    const lines = item.split("\n").map(l => l.trim()).filter(Boolean);
 
-    const sourceMatch = item.match(/Source:\s*(.*)/);
-    const source = sourceMatch ? sourceMatch[1] : "";
+    // Title
+    const title = lines[0].replace(/\*\*/g, "");
 
-    const problemMatch = item.match(/Problem:\s*([\s\S]*?)(?=\n|Fix:|$)/);
-    const problem = problemMatch ? problemMatch[1].trim() : "";
+    // Source (optional)
+    const sourceLine = lines.find(l => l.startsWith("Source:"));
+    const source = sourceLine ? sourceLine.replace("Source:", "").trim() : "";
 
-    const fixMatch = item.match(/```([\s\S]*?)```/);
-    const fix = fixMatch ? fixMatch[1].trim() : "";
+    // Description (Problem OR Observation)
+    const descLine = lines.find(l =>
+      l.startsWith("Problem:") || l.startsWith("Observation:")
+    );
+
+    const description = descLine
+      ? descLine.replace(/(Problem:|Observation:)/, "").trim()
+      : "";
+
+    // Code block (``` ... ```)
+    const codeBlockMatch = item.match(/```([\s\S]*?)```/);
+    let code = codeBlockMatch ? codeBlockMatch[1].trim() : "";
+
+    // Inline Code fallback (Code: ...)
+    if (!code) {
+      const inlineCodeLine = lines.find(l => l.startsWith("Code:"));
+      if (inlineCodeLine) {
+        code = inlineCodeLine.replace("Code:", "").trim();
+      }
+    }
 
     return `
       <div class="analysis-card">
-        <div class="analysis-card-header">${title}</div>
+        <div class="analysis-card-header">${escapeHtml(title)}</div>
 
-        ${source ? `<div class="analysis-meta"><span>Source:</span> ${escapeHtml(source)}</div>` : ""}
-        ${problem ? `<div class="analysis-text">${escapeHtml(problem)}</div>` : ""}
+        ${source ? `
+          <div class="analysis-meta">
+            <span>Source:</span> ${escapeHtml(source)}
+          </div>
+        ` : ""}
 
-        ${fix ? `<pre class="code-block">${escapeHtml(fix)}</pre>` : ""}
+        ${description ? `
+          <div class="analysis-text">
+            ${escapeHtml(description)}
+          </div>
+        ` : ""}
+
+        ${code ? `
+          <pre class="code-block">${escapeHtml(code)}</pre>
+        ` : ""}
       </div>
     `;
   }).join("");
