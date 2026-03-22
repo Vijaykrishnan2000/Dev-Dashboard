@@ -4,38 +4,11 @@ let state = {
   stories: [],
   selected: null,
   commits: [],
-  analysis: null,          
-  analysisPromise: null    
+  analysis: null,
+  analysisPromise: null
 };
 
 init();
-
-/*async function init() {
-  setStatus("Loading stories...");
-
-  try {
-    const res = await fetch(API_URL);
-    console.log("API Response Status:", res.status);
-    console.log('API URL:', API_URL);
-    if (!res.ok) {
-      throw new Error(`API error: ${res.statusText}`);
-    }
-    const data = await res.json();
-
-    state.stories = data.stories;
-
-    renderStories();
-
-    if (state.stories.length > 0) {
-      selectStory(state.stories[0]);
-    }
-
-    setStatus("");
-
-  } catch (e) {
-    setStatus("Failed to load stories");
-  }
-}*/
 
 async function init() {
   setStatus("Loading data...");
@@ -43,7 +16,7 @@ async function init() {
   try {
     const [storiesRes, commits] = await Promise.all([
       fetch(API_URL),
-      fetchCommits() // 👈 fetch early
+      fetchCommits()
     ]);
 
     if (!storiesRes.ok) {
@@ -53,7 +26,7 @@ async function init() {
     const data = await storiesRes.json();
 
     state.stories = data.stories;
-    state.commits = commits; // 👈 store commits
+    state.commits = commits;
 
     renderStories();
 
@@ -108,10 +81,8 @@ function renderOverview() {
   `;
 }
 
+/* -------------------- COMMITS -------------------- */
 
-/////////////////////// 🔥 NEW LOGIC STARTS HERE ///////////////////////
-
-// 🔥 Fetch commits from GitHub (via Netlify)
 async function fetchCommits() {
   const owner = 'Vijaykrishnan2000';
   const repo = 'CHAT-API-Website';
@@ -121,12 +92,7 @@ async function fetchCommits() {
   try {
     const response = await fetch('/.netlify/functions/getCommits', {
       method: 'POST',
-      body: JSON.stringify({
-        owner,
-        repo,
-        branch,
-        since
-      })
+      body: JSON.stringify({ owner, repo, branch, since })
     });
 
     const data = await response.json();
@@ -160,7 +126,8 @@ function formatCommits(commits) {
   }));
 }
 
-// Render into PR tab
+/* -------------------- PR RENDER -------------------- */
+
 function renderPRs(commits) {
   const container = document.getElementById("prs");
 
@@ -170,34 +137,6 @@ function renderPRs(commits) {
   }
 
   console.log('commits:', JSON.stringify(commits, null, 2));
-
-  /*let html = `
-    <table class="pr-table">
-      <thead>
-        <tr>
-          <th>S.No</th>
-          <th>Commit Message</th>
-          <th>Author</th>
-          <th>Date</th>
-        </tr>
-      </thead>
-      <tbody>
-  `;
-
-  commits.forEach(c => {
-    html += `
-      <tr>
-        <td>${c.sno}</td>
-        <td><a href="${c.url}" target="_blank">${c.message}</a></td>
-        <td>${c.author}</td>
-        <td>${c.date}</td>
-      </tr>
-    `;
-  });
-
-  html += `</tbody></table>`;
-
-  container.innerHTML = html;*/
 
   let html = `
   <table class="pr-table">
@@ -213,11 +152,11 @@ function renderPRs(commits) {
     <tbody>
 `;
 
-commits.forEach((c, index) => {
-  const message = c.message.split('\n')[0];
+  commits.forEach((c, index) => {
+    const message = c.message.split('\n')[0];
   const authorName = c.author;
   const date = new Date(c.date).toLocaleDateString();
-  const avatar = c.avatar || 'https://i.pravatar.cc/40';
+    const avatar = c.avatar || 'https://i.pravatar.cc/40';
   const url = c.url;
 
   // derive status from verification
@@ -225,22 +164,22 @@ commits.forEach((c, index) => {
   const statusClass = isVerified ? 'pr-merged' : 'pr-closed';
   const statusLabel = isVerified ? 'verified' : 'unverified';
 
-  html += `
+    html += `
     <tr class="pr-expand" data-sha="${c.sha}">
-      <td>${index + 1}</td>
+        <td>${index + 1}</td>
       <td>
         <span class="pr-toggle">▶</span>
         <a href="${url}" target="_blank">${message}</a>
       </td>
-      <td>
-        <div class="pr-author">
-          <img class="pr-avatar" src="${avatar}" />
+        <td>
+          <div class="pr-author">
+            <img class="pr-avatar" src="${avatar}" />
           <span>${authorName}</span>
-        </div>
-      </td>
+          </div>
+        </td>
       <td>${date}</td>
-      <td><span class="pr-badge ${statusClass}">${statusLabel}</span></td>
-    </tr>
+        <td><span class="pr-badge ${statusClass}">${statusLabel}</span></td>
+      </tr>
 
     <tr class="pr-details-row">
       <td colspan="5">
@@ -249,16 +188,15 @@ commits.forEach((c, index) => {
         </div>
       </td>
     </tr>
-  `;
-});
+    `;
+  });
 
-html += `</tbody></table>`;
-container.innerHTML = html;
+  html += `</tbody></table>`;
+  container.innerHTML = html;
 }
 
-/////////////////////// 🔥 NEW LOGIC ENDS HERE ///////////////////////
+/* -------------------- ANALYSIS FLOW -------------------- */
 
-// Tabs
 document.querySelectorAll(".tab").forEach(tab => {
   tab.onclick = async () => {
     document.querySelectorAll(".tab").forEach(t => t.classList.remove("active"));
@@ -269,28 +207,25 @@ document.querySelectorAll(".tab").forEach(tab => {
 
     // 🔥 ADDITION: PR TAB CLICK LOGIC
     if (tab.dataset.tab === "prs") {
+      const container = document.getElementById("prs");
 
-       const container = document.getElementById("prs");
-
-        // render only once
-        if (container.dataset.loaded === "true") return;
+      if (container.dataset.loaded === "true") return;
 
         if (!state.commits.length) {
             container.innerHTML = "<p>No commits found</p>";
             return;
         }
 
-        renderPRs(state.commits);
-
-        container.dataset.loaded = "true";
+      renderPRs(state.commits);
+      container.dataset.loaded = "true";
     }
 
     // Analyze tab click logic
     if (tab.dataset.tab === "analysis") {
-        const container = document.getElementById("analysis");
+      const container = document.getElementById("analysis");
 
         // prevent re-run
-        if (container.dataset.loaded === "true") return;
+      if (container.dataset.loaded === "true") return;
 
         // ensure commits are available
         if (!state.commits.length) {
@@ -298,36 +233,30 @@ document.querySelectorAll(".tab").forEach(tab => {
             return;
         }
 
-        container.innerHTML = "<p>Generating analysis...</p>";
+      container.innerHTML = "<p>Generating analysis...</p>";
 
-        try {
-            // cache promise to avoid duplicate calls
-            if (!state.analysisPromise) {
-            state.analysisPromise = generateCombinedDiff();
-            }
-
-            const data = await state.analysisPromise;
-
-            state.analysis = data;
-
-            renderAnalysis(data);
-
-            container.dataset.loaded = "true";
-
-        } catch (e) {
-            console.error(e);
-            container.innerHTML = "<p>Failed to generate analysis</p>";
+      try {
+        if (!state.analysisPromise) {
+          state.analysisPromise = runFullAnalysisFlow();
         }
-    }
 
+        const result = await state.analysisPromise;
+
+        renderGeminiResponse(result);
+
+        container.dataset.loaded = "true";
+
+      } catch (e) {
+        console.error(e);
+        container.innerHTML = "<p>Analysis failed</p>";
+      }
+    }
   };
 });
 
-async function generateCombinedDiff() {
-  const owner = 'Vijaykrishnan2000';
-  const repo = 'CHAT-API-Website';
-  const branch = 'main';
+/* -------------------- STEP 1: GET DIFF -------------------- */
 
+async function generateCombinedDiff() {
   const commits = state.commits.map(c => ({
     sha: c.sha,
     url: c.url
@@ -336,39 +265,204 @@ async function generateCombinedDiff() {
 
   const res = await fetch('/.netlify/functions/combine-commits', {
     method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ commits })
+  });
+
+  return await res.json();
+}
+
+/* -------------------- STEP 2: GEMINI CALL -------------------- */
+
+async function callGemini(diff) {
+
+  const prompt = `
+**Role:** Staff Software Engineer (Production Gatekeeper).
+**Constraint:** Extreme brevity. No conversational filler. No intro/outro. Use strictly professional/technical vocabulary.
+
+**Evaluation Criteria:**
+1. **Score:** Rate 0 to 100 based on Architecture, Security, and Production-Readiness.
+2. **Blockers:** Functional bugs or security vulnerabilities requiring immediate rejection.
+3. **Refactorings:** Technical debt or efficiency improvements. Use code blocks to highlight exact fixes.
+
+**Output Format (Strict):**
+
+# [Score: X/100]
+
+### 🚨 BLOCKERS
+* **[Issue]**
+  * Source: [File/Line Number]
+  * Problem: [Impact]
+  * Fix: [Code Block]
+
+### 🛠️ REFACTORINGS
+* **[Subject]**
+  * Observation: [Short Description]
+  * Code: [Diff-style fix or one-liner]
+
+### 🔒 SECURITY & BEST PRACTICES
+* [Point-form observations regarding data leakages, sanitization, or naming]
+
+**Input Diff:**
+${diff}
+`;
+
+  const res = await fetch('/.netlify/functions/gemini-proxy', {
+    method: 'POST',
     headers: {
       'Content-Type': 'application/json'
     },
-    body: JSON.stringify({ commits })
+    body: JSON.stringify({ prompt })
   });
 
   const data = await res.json();
 
-  console.log("Combined Diff:", data.combinedDiff);
-
-  return data;
+  return data.response || data;
 }
 
-function renderAnalysis(data) {
+/* -------------------- ORCHESTRATION -------------------- */
+
+async function runFullAnalysisFlow() {
+
+  // Step 1: GitHub Diff
+  const diffData = await generateCombinedDiff();
+
+  if (!diffData || !diffData.combinedDiff) {
+    throw new Error("No diff generated");
+  }
+  console.log("Combined Diff:", JSON.stringify(diffData.combinedDiff,null,2));
+
+  // Step 2: Gemini
+  const geminiResponse = await callGemini(diffData.combinedDiff);
+  console.log("Gemini Response:", JSON.stringify(geminiResponse, null, 2));
+
+  return {
+    diff: diffData.combinedDiff,
+    llm: geminiResponse
+  };
+}
+
+/* -------------------- RENDER GEMINI -------------------- */
+
+function renderGeminiResponse(data) {
   const container = document.getElementById("analysis");
 
-  if (!data || !data.combinedDiff) {
-    container.innerHTML = "<p>No analysis available</p>";
-    return;
-  }
+  const raw = data?.llm || data?.reply || "";
+
+  const parsed = parseLLMResponse(raw);
 
   container.innerHTML = `
     <div class="analysis-container">
+
+      <div class="score-card">
+        <span>Score</span>
+        <h2>${parsed.score}</h2>
+      </div>
+
+      ${renderSection("🚨 BLOCKERS", parsed.blockers, "blocker")}
+      ${renderSection("🛠️ REFACTORINGS", parsed.refactorings, "refactor")}
+      ${renderSection("🔒 SECURITY & BEST PRACTICES", parsed.security, "security")}
+
       <h3>Combined Diff</h3>
-      <pre class="analysis-diff">${escapeHtml(data.combinedDiff)}</pre>
+      <pre class="analysis-diff">${escapeHtml(data.diff)}</pre>
+
     </div>
   `;
 }
 
-function escapeHtml(str) {
+function parseLLMResponse(text) {
+  const safeText = typeof text === "string" ? text : JSON.stringify(text);
+
+  const scoreMatch = safeText.match(/Score:\s*(\d+)/);
+  const score = scoreMatch ? scoreMatch[1] + "/100" : "N/A";
+
+  const extractSection = (title) => {
+    const regex = new RegExp(`###\\s+${title}([\\s\\S]*?)(?=###|$)`);
+    const match = safeText.match(regex);
+    return match ? match[1].trim() : "";
+  };
+
+  return {
+    score,
+    blockers: extractSection("🚨 BLOCKERS"),
+    refactorings: extractSection("🛠️ REFACTORINGS"),
+    security: extractSection("🔒 SECURITY & BEST PRACTICES")
+  };
+}
+
+function renderSection(title, content, type) {
+  if (!content) return "";
+
+  return `
+    <div class="section ${type}">
+      <h3>${title}</h3>
+      <div class="analysis-list">
+        ${formatContent(content, type)}
+      </div>
+    </div>
+  `;
+}
+
+function formatContent(text, type) {
+  if (!text) return "";
+
+  let cleaned = text
+    .replace(/\\n/g, "\n")
+    .replace(/```javascript/g, "```")
+    .replace(/javascript\n/g, "")
+    .trim();
+
+  // 👉 SECURITY: simple bullet rendering
+  if (type === "security") {
+    const items = cleaned
+      .split(/\n\* /)
+      .map(i => i.replace(/^\* /, "").trim())
+      .filter(Boolean);
+
+    return `
+      <ul class="analysis-simple-list">
+        ${items.map(i => `<li>${escapeHtml(i)}</li>`).join("")}
+      </ul>
+    `;
+  }
+
+  // 👉 STRUCTURED (Blockers / Refactorings)
+  const items = cleaned.split(/\n\* /).filter(Boolean);
+
+  return items.map(item => {
+    const titleMatch = item.match(/\*\*(.*?)\*\*/);
+    const title = titleMatch ? titleMatch[1] : item.split("\n")[0];
+
+    const sourceMatch = item.match(/Source:\s*(.*)/);
+    const source = sourceMatch ? sourceMatch[1] : "";
+
+    const problemMatch = item.match(/Problem:\s*([\s\S]*?)(?=\n|Fix:|$)/);
+    const problem = problemMatch ? problemMatch[1].trim() : "";
+
+    const fixMatch = item.match(/```([\s\S]*?)```/);
+    const fix = fixMatch ? fixMatch[1].trim() : "";
+
+    return `
+      <div class="analysis-card">
+        <div class="analysis-card-header">${title}</div>
+
+        ${source ? `<div class="analysis-meta"><span>Source:</span> ${escapeHtml(source)}</div>` : ""}
+        ${problem ? `<div class="analysis-text">${escapeHtml(problem)}</div>` : ""}
+
+        ${fix ? `<pre class="code-block">${escapeHtml(fix)}</pre>` : ""}
+      </div>
+    `;
+  }).join("");
+}
+
+/* -------------------- UTIL -------------------- */
+
+function escapeHtml(input) {
+  if (!input) return "";
+  const str = typeof input === "string" ? input : JSON.stringify(input, null, 2);
+
   return str
     .replace(/&/g, "&amp;")
     .replace(/</g, "&lt;")
     .replace(/>/g, "&gt;");
 }
-
