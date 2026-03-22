@@ -2,12 +2,15 @@ const API_URL = "/.netlify/functions/getStories";
 
 let state = {
   stories: [],
-  selected: null
+  selected: null,
+  commits: [],
+  analysis: null,          
+  analysisPromise: null    
 };
 
 init();
 
-async function init() {
+/*async function init() {
   setStatus("Loading stories...");
 
   try {
@@ -31,6 +34,37 @@ async function init() {
 
   } catch (e) {
     setStatus("Failed to load stories");
+  }
+}*/
+
+async function init() {
+  setStatus("Loading data...");
+
+  try {
+    const [storiesRes, commits] = await Promise.all([
+      fetch(API_URL),
+      fetchCommits() // 👈 fetch early
+    ]);
+
+    if (!storiesRes.ok) {
+      throw new Error(`API error: ${storiesRes.statusText}`);
+    }
+
+    const data = await storiesRes.json();
+
+    state.stories = data.stories;
+    state.commits = commits; // 👈 store commits
+
+    renderStories();
+
+    if (state.stories.length > 0) {
+      selectStory(state.stories[0]);
+    }
+
+    setStatus("");
+
+  } catch (e) {
+    setStatus("Failed to load data");
   }
 }
 
@@ -236,22 +270,105 @@ document.querySelectorAll(".tab").forEach(tab => {
     // 🔥 ADDITION: PR TAB CLICK LOGIC
     if (tab.dataset.tab === "prs") {
 
-      const container = document.getElementById("prs");
+       const container = document.getElementById("prs");
 
-      // prevent reload
-      if (container.dataset.loaded === "true") return;
+        // render only once
+        if (container.dataset.loaded === "true") return;
 
-      container.innerHTML = "<p>Loading commits...</p>";
+        if (!state.commits.length) {
+            container.innerHTML = "<p>No commits found</p>";
+            return;
+        }
 
-      //const storyId = '';
+        renderPRs(state.commits);
 
-      const commits = await fetchCommits();
+        container.dataset.loaded = "true";
+    }
 
-      renderPRs(commits);
+    // Analyze tab click logic
+    if (tab.dataset.tab === "analysis") {
+        const container = document.getElementById("analysis");
 
-      container.dataset.loaded = "true";
+        // prevent re-run
+        if (container.dataset.loaded === "true") return;
+
+        // ensure commits are available
+        if (!state.commits.length) {
+            container.innerHTML = "<p>No commits available</p>";
+            return;
+        }
+
+        container.innerHTML = "<p>Generating analysis...</p>";
+
+        try {
+            // cache promise to avoid duplicate calls
+            if (!state.analysisPromise) {
+            state.analysisPromise = generateCombinedDiff();
+            }
+
+            const data = await state.analysisPromise;
+
+            state.analysis = data;
+
+            renderAnalysis(data);
+
+            container.dataset.loaded = "true";
+
+        } catch (e) {
+            console.error(e);
+            container.innerHTML = "<p>Failed to generate analysis</p>";
+        }
     }
 
   };
 });
+
+async function generateCombinedDiff() {
+  const owner = 'Vijaykrishnan2000';
+  const repo = 'CHAT-API-Website';
+  const branch = 'main';
+
+  const commits = state.commits.map(c => ({
+    sha: c.sha,
+    url: c.url
+  }));
+  console.log("Generating combined diff for commits:", JSON.stringify(commits, null, 2));
+
+  const res = await fetch('/.netlify/functions/combine-commits', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json'
+    },
+    body: JSON.stringify({ commits })
+  });
+
+  const data = await res.json();
+
+  console.log("Combined Diff:", data.combinedDiff);
+
+  return data;
+}
+
+function renderAnalysis(data) {
+  const container = document.getElementById("analysis");
+
+  if (!data || !data.combinedDiff) {
+    container.innerHTML = "<p>No analysis available</p>";
+    return;
+  }
+
+  container.innerHTML = `
+    <div class="analysis-container">
+      <h3>Combined Diff</h3>
+      <pre class="analysis-diff">${escapeHtml(data.combinedDiff)}</pre>
+    </div>
+  `;
+}
+
+function escapeHtml(str) {
+  return str
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;");
+}
 
