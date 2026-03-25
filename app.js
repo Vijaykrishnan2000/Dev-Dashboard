@@ -39,14 +39,29 @@ const API = {
   },
 
   async callLLM(prompt) {
+    console.log("[LLM] callLLM start", { promptPreview: String(prompt || "").slice(0, 200) });
+
     const res = await fetch("/.netlify/functions/gemini-proxy", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ prompt }),
     });
-    if (!res.ok) throw new Error(`LLM API error: ${res.statusText}`);
+
+    if (!res.ok) {
+      console.error("[LLM] callLLM response error", { status: res.status, statusText: res.statusText });
+      throw new Error(`LLM API error: ${res.statusText}`);
+    }
+
     const data = await res.json();
-    return data.response || data;
+    console.log("[LLM] callLLM raw JSON response", data);
+
+    const processed = data?.response || data?.reply || data;
+    if (processed == null) {
+      console.warn("[LLM] callLLM processed output is null/undefined", { data });
+    }
+    console.log("[LLM] callLLM output", processed);
+
+    return processed;
   },
 };
 
@@ -254,7 +269,9 @@ ${diff}
 const Parsers = {
 
   analysis(raw) {
+    console.log("[Parser] analysis start", { raw });
     const text = Utils.sanitizeLLMText(raw);
+    console.log("[Parser] analysis sanitized", { text });
 
     const scoreMatch = text.match(/Score:\s*(\d+)/i);
     const score = scoreMatch ? `${scoreMatch[1]}/100` : "N/A";
@@ -276,13 +293,18 @@ const Parsers = {
   },
 
   testing(raw) {
+    console.log("[Parser] testing start", { raw });
     const text = Utils.sanitizeLLMText(raw);
+    console.log("[Parser] testing sanitized", { text });
     try {
       // Strip any stray fences
       const clean = text.replace(/```json?/g, "").replace(/```/g, "").trim();
-      return JSON.parse(clean);
-    } catch {
-      console.error("Failed to parse testing JSON:", text);
+      console.log("[Parser] testing JSON to parse", { clean });
+      const parsed = JSON.parse(clean);
+      console.log("[Parser] testing parsed", parsed);
+      return parsed;
+    } catch (e) {
+      console.error("[Parser] Failed to parse testing JSON:", text, e);
       return null;
     }
   },
@@ -436,7 +458,12 @@ const Render = {
   },
 
   analysis(result, diff) {
+    console.log("[Render] analysis start", { result, diffLength: diff?.length });
     const parsed    = Parsers.analysis(result);
+    console.log("[Render] analysis parsed object", parsed);
+    if (!parsed || !parsed.score) {
+      console.warn("[Render] analysis has no parsed score or empty parsed object", parsed);
+    }
     const container = document.getElementById("analysis");
 
     container.innerHTML = `
@@ -777,12 +804,18 @@ async function runAnalysisFlow() {
 
   Render.analysisStep(1);
   const diffData = await API.generateCombinedDiff(State.get("commits"));
-  if (!diffData?.combinedDiff) throw new Error("No diff returned from server");
+  console.log("[Flow] runAnalysisFlow diffData", diffData);
+  if (!diffData?.combinedDiff) {
+    console.error("[Flow] runAnalysisFlow missing combinedDiff", diffData);
+    throw new Error("No diff returned from server");
+  }
 
   Render.analysisStep(2);
-  const llmRaw = await API.callLLM(
-    Prompts.analysis(diffData.combinedDiff, State.get("selectedStory")?.description || "")
-  );
+  const prompt = Prompts.analysis(diffData.combinedDiff, State.get("selectedStory")?.description || "");
+  console.log("[Flow] runAnalysisFlow prompt size", { promptLength: prompt.length });
+
+  const llmRaw = await API.callLLM(prompt);
+  console.log("[Flow] runAnalysisFlow raw LLM output", { llmRaw });
 
   Render.analysisStep(3);
   return { raw: llmRaw, diff: diffData.combinedDiff };
@@ -799,10 +832,15 @@ async function runTestingFlow() {
   const llmRaw = await API.callLLM(
     Prompts.testing(diffData.combinedDiff, State.get("selectedStory")?.description || "")
   );
+  console.log("Raw LLM output for testing suite:", llmRaw);
 
   Render.testingStep(3);
   const parsed = Parsers.testing(llmRaw);
-  if (!parsed) throw new Error("LLM returned malformed JSON for testing suite");
+  console.log("[Flow] runTestingFlow parsed result", parsed);
+  if (!parsed) {
+    console.error("[Flow] runTestingFlow parsed is null/undefined", { llmRaw });
+    throw new Error("LLM returned malformed JSON for testing suite");
+  }
 
   return parsed;
 }
@@ -928,6 +966,9 @@ document.querySelectorAll(".tab").forEach((tab) => {
           State._data._analysisPromise = runAnalysisFlow();
         }
         const result = await State._data._analysisPromise;
+        console.log("Final parsed analysis result:", result);
+        console.log("Storing analysis result in state:", JSON.stringify(result));
+        console.log("Raw analysis result stored in state:", State.get("analysisResult"));
         State.set("analysisResult", result);
         Render.analysis(result.raw, result.diff);
         container.dataset.loaded = "true";
